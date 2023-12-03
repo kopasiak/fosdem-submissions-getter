@@ -3,7 +3,7 @@
 Usage
 
 ```shell
-./getsubmissions.py -a {Auth token as in your pretalx.fosdem.org User config page} -t {substring of track name} > tracksubmissions.json
+./getsubmissions.py -a {Auth token from https://pretalx.fosdem.org/orga/me} -t {substring of track name} > tracksubmissions.json
 ./getscores.py -a {as above} tracksubmissions.json
 ```
 
