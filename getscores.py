@@ -7,7 +7,7 @@ import csv
 import requests
 
 URL_PREFIX = "https://pretalx.fosdem.org"
-EVENT = "fosdem-2024"
+EVENT = "fosdem-2025"
 SUBMISSIONS = f"{URL_PREFIX}/api/events/{EVENT}/submissions"
 REVIEWS = f"{URL_PREFIX}/api/events/{EVENT}/reviews"
 
@@ -29,21 +29,24 @@ def go(infile, auth_token: str):
             print(json.dumps(reviews, indent=True))
             print(ke)
             continue
-        review_scores[f"{submission['title']} – {submission['speakers'][0]['name']}"] = scores
+        review_scores[f"{submission['title']} – {submission['speakers'][0]['name']}"] = {
+            "scores": scores, "title": submission['title'], "speakers": [s["name"] for s in submission["speakers"]],
+            "duration": submission["duration"]}
 
     reviewers = set()
 
-    for scores in review_scores.values():
+    for scores in [rs["scores"] for rs in review_scores.values()]:
         reviewers |= set(scores.keys())
 
     reviewers = list(sorted(reviewers))
 
     with open("review_scores.csv", "w", encoding="utf-8") as csvfile:
         writer = csv.DictWriter(csvfile,
-                                fieldnames=["Talk Title"] + reviewers + ["Average"], restval="")
+                                fieldnames=["Talk Title", "Duration", "Speakers"] + reviewers + ["Average"], restval="")
         writer.writeheader()
-        for title, scores in review_scores.items():
-            rowdict = {"Talk Title": title}
+        for id, rs in review_scores.items():
+            scores = rs["scores"]
+            rowdict = {"Talk Title": rs["title"], "Speakers": rs["speakers"], "Duration": rs["duration"]}
             sumscore = 0
             counter = 0
             for user, score in scores.items():

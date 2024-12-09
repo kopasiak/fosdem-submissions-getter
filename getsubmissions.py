@@ -5,10 +5,19 @@ import requests
 import json
 
 URL_PREFIX = "https://pretalx.fosdem.org"
-EVENT = "fosdem-2024"
+EVENT = "fosdem-2025"
 SUBMISSIONS = f"{URL_PREFIX}/api/events/{EVENT}/submissions"
 REVIEWS = f"{URL_PREFIX}/api/events/{EVENT}/submissions"
 
+def submission_in_track(submission, track):
+    if (not track):
+        return True
+
+    t = submission.get("track", {"en": None})
+    if not isinstance(t, str):
+        t = t["en"]
+
+    return track in t
 
 def go(track: str = "", auth_token: str = "") -> None:
     session = requests.Session()
@@ -18,12 +27,13 @@ def go(track: str = "", auth_token: str = "") -> None:
     result = session.get(SUBMISSIONS)
     # print(result.json())
     submissions = [submission for submission in result.json()["results"]
-                   if (not track) or track in submission.get("track", {"en": None})["en"]]
+                   if submission_in_track(submission, track)]
     next_URL = result.json().get("next", None)
     while next_URL:
+        # print("Next one")
         result = session.get(next_URL)
         new = [submission for submission in result.json()["results"]
-               if (not track) or track in submission.get("track", {"en": None})["en"]]
+               if submission_in_track(submission, track)]
         submissions += new
         next_URL = result.json().get("next", None)
 
